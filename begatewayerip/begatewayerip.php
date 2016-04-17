@@ -26,8 +26,6 @@
 if (!defined('_PS_VERSION_'))
 	exit;
 
-require_once _PS_MODULE_DIR_.'begatewayerip/includer.php';
-
 class beGatewayERIP extends PaymentModule
 {
 
@@ -126,7 +124,6 @@ private $os_payment_green_statuses = array(
 			Configuration::updateValue('BEGATEWAYERIP_SHOP_ID', '') &&
 			Configuration::updateValue('BEGATEWAYERIP_SHOP_KEY', '') &&
 			Configuration::updateValue('BEGATEWAYERIP_DOMAIN_API', 'api.bepaid.by') &&
-			Configuration::updateValue('BEGATEWAYERIP_AUTO', 1) &&
 			Configuration::updateValue('BEGATEWAYERIP_SERVICE_NO', 99999999);
 	}
 
@@ -135,7 +132,6 @@ private $os_payment_green_statuses = array(
 		Configuration::deleteByName('BEGATEWAYERIP_SHOP_ID');
 		Configuration::deleteByName('BEGATEWAYERIP_SHOP_KEY');
 		Configuration::deleteByName('BEGATEWAYERIP_DOMAIN_API');
-		Configuration::deleteByName('BEGATEWAYERIP_AUTO');
 		Configuration::deleteByName('BEGATEWAYERIP_SERVICE_NO');
 
 		return parent::uninstall();
@@ -168,7 +164,7 @@ private $os_payment_green_statuses = array(
 			$langs = Language::getLanguages();
 
 			foreach ($langs as $lang)
-				$order_state->name[$lang['id_lang']] = html_entity_decode($value, 'UTF-8');
+				$order_state->name[$lang['id_lang']] = html_entity_decode($value, ENT_COMPAT | ENT_HTML401, 'UTF-8');
 
 			$order_state->invoice = $invoice;
 			$order_state->send_email = $send_email;
@@ -181,6 +177,7 @@ private $os_payment_green_statuses = array(
 
 			$order_state->logable = $logable;
 			$order_state->color = $color;
+
 			$order_state->save();
 
 			Configuration::updateValue($key, (int)$order_state->id);
@@ -227,7 +224,6 @@ private $os_payment_green_statuses = array(
 			Configuration::updateValue('BEGATEWAYERIP_SHOP_KEY', Tools::getvalue('begatewayerip_shop_key'));
 			Configuration::updateValue('BEGATEWAYERIP_DOMAIN_API', Tools::getvalue('begatewayerip_domain_api'));
 			Configuration::updateValue('BEGATEWAYERIP_SERVICE_NO', Tools::getvalue('begatewayerip_service_no'));
-			Configuration::updateValue('BEGATEWAYERIP_AUTO', Tools::getvalue('begatewayerip_auto'));
 
 			$html .= $this->displayConfirmation($this->l('Настройки сохранены'));
 		}
@@ -241,7 +237,6 @@ private $os_payment_green_statuses = array(
 			'BEGATEWAYERIP_SHOP_KEY' => Configuration::get('BEGATEWAYERIP_SHOP_KEY'),
 			'BEGATEWAYERIP_DOMAIN_API' => Configuration::get('BEGATEWAYERIP_DOMAIN_API'),
 			'BEGATEWAYERIP_SERVICE_NO' => Configuration::get('BEGATEWAYERIP_SERVICE_NO'),
-			'BEGATEWAYERIP_AUTO' => Configuration::get('BEGATEWAYERIP_AUTO')
 		));
 
 		return $this->context->smarty->fetch(dirname(__FILE__).'/views/templates/admin/configuration.tpl');
@@ -281,6 +276,39 @@ public function hookHeader()
 			$this->pcc->transaction_id = (string)$response['transaction']['uid'];
 		}
 	}
+
+/**
+ * Change order status
+ *
+ * @param $obj_order
+ * @param $id_status
+ * @param $errors
+ */
+  public function changeOrderStatus($obj_order, $id_status)
+  {
+    // Create new OrderHistory
+    $history = new OrderHistory();
+    $history->id_order = $obj_order->id;
+    $history->changeIdOrderState($id_status, (int)$obj_order->id);
+
+    $template_vars = array();
+    // Save all changes
+    if ($history->addWithemail(true, $template_vars))
+    {
+      // synchronizes quantities if needed..
+      if (Configuration::get('PS_ADVANCED_STOCK_MANAGEMENT'))
+      {
+        foreach ($obj_order->getProducts() as $product)
+        {
+          if (StockAvailable::dependsOnStock($product['product_id']))
+            StockAvailable::synchronize($product['product_id'], (int)$product['id_shop']);
+        }
+      }
+    }
+    else {
+      Logger::addLog('Произошла ошибка при смене статуса заказа или не получилось выслать письмо клиенту',4);
+    }
+  }
 
 	private function checkForUpdates()
 	{
