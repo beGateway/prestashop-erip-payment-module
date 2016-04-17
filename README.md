@@ -7,15 +7,15 @@
   * Зайдите в зону администратора магазина и выберете меню _Модули_
   * Нажмите _Добавить модуль_
 
-![Добавить модуль](https://github.com/beGateway/prestashop-payment-module/raw/master/doc/add-module-button-ru.png)
+![Добавить модуль](https://github.com/beGateway/prestashop-erip-payment-module/raw/master/doc/add-module-button-ru.png)
 
   * Загрузите модуль _begateway.zip_ через _ДОБАВИТЬ МОДУЛЬ_
 
-![Загрузить модуль](https://github.com/beGateway/prestashop-payment-module/raw/master/doc/add-module-file-ru.png)
+![Загрузить модуль](https://github.com/beGateway/prestashop-erip-payment-module/raw/master/doc/add-module-file-ru.png)
 
   * Найдите модуль _Система Расчёт (ЕРИП)_ в списке модулей и установите его
 
-![Установить модуль](https://github.com/beGateway/prestashop-payment-module/raw/master/doc/add-module-install.png)
+![Установить модуль](https://github.com/beGateway/prestashop-erip-payment-module/raw/master/doc/add-module-install.png)
 
 ## Настройка магазина
 

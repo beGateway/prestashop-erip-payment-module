@@ -13,3 +13,15 @@ $_MODULE['<{begatewayerip}prestashop>configuration_d125d168a6899e57371eaac450567
 $_MODULE['<{begatewayerip}prestashop>configuration_318cb3d63237f08b18226fa35b598edd'] = 'Код услуги ЕРИП';
 $_MODULE['<{begatewayerip}prestashop>configuration_f2e3f707d57e6441543b167c0e908dcd'] = 'Сохранить настройки';
 $_MODULE['<{begatewayerip}prestashop>begatewayerip_26848989c34eb11b252746f847a87356'] = 'Оплатить через Расчёт (ЕРИП)';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_4b2dd68e39571aabe46081d9b90cf707'] = 'Ниже содержится инструкция как оплатить заказ';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_c489c8b5653b8065138f9140af0d3955'] = 'через систему Расчёт (ЕРИП).';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_717d25fe2cbcc893e3d4c19f5d2f2559'] = 'Если Вы осуществляете платеж в кассе банка, пожалуйста, сообщите кассиру о необходимости проведения платежа через систему Расчёт (ЕРИП).';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_1bc611522d107a5675f3b4444cf07eab'] = 'Для проведения платежа необходимо:';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_594d34bea9eac5e619047807672500c4'] = 'Выбрать пункт Система \"Расчёт\" (ЕРИП)';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_c320621f08ddfee7b230f69f0922fc03'] = 'Выбрать последовательно вкладки:';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_eef5a36447a450f2f40a119698459b9d'] = 'Ввести номер заказа';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_71b1048f0b23f55f9d17bda24dd5fc07'] = 'Проверить корректность информации';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_53da291662a41f10b7b0dcc922872342'] = 'Совершить платёж';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_fcfde6c1174a6a91dcead7f1efdb1af8'] = 'В случае вопрос по заказу свяжитесь с нашей';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_2f205a0edc4436984a6bb5d7a47d868a'] = 'службой поддержки';
+$_MODULE['<{begatewayerip}prestashop>orderconfirmation_4005747e15c40cc0b6b682c641448948'] = 'Произошла ошибка при обработке Вашего заказа. Свяжитесь с нашей';
