@@ -23,7 +23,7 @@
 
   * Введите в полях _ID магазина_, _Ключ магазина_, _Домен API_ и _Код услуги ЕРИП_ значения, полученные от bePaid.by
 
-![Настройка модуля](https://github.com/beGateway/prestashop-payment-module/raw/master/doc/config-module.png)
+![Настройка модуля](https://github.com/beGateway/prestashop-erip-payment-module/raw/master/doc/config-module.png)
 
 ## Готово!
 
