@@ -246,7 +246,6 @@ private $os_payment_green_statuses = array(
 	{
     if (!$this->active)
     return;
-
 		$this->context->smarty->assign('begatewayerip_path',$this->_path);
 		$this->context->smarty->assign('order_id', (int)$params['cart']->id);
 
