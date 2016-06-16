@@ -92,43 +92,52 @@ class be_gateway_erip_validation extends beGatewayERIP {
     $callbackurl = str_replace('carts.local', 'webhook.begateway.com:8443', $callbackurl);
     $paid_amount = (int)($cart->getOrderTotal(true, Cart::BOTH) * pow(10, (int)$currency->decimals * _PS_PRICE_COMPUTE_PRECISION_));
 
-    $params = array(
-      'request' => array(
-      	'amount' => $paid_amount,
-      	'currency' => $currency->iso_code,
-        'description' => 'Оплата заказа '.(int)$_REQUEST['order_id'],
-        'email' => $email,
-        'ip' => $_SERVER['REMOTE_ADDR'],
-        'order_id' => (int)$_REQUEST['order_id'],
-        'notification_url' => $callbackurl,
-        'payment_method' => array(
-          'type' => 'erip',
-          'account_number' => (int)$_REQUEST['order_id'],
-          'service_no' => (int)Configuration::get('BEGATEWAYERIP_SERVICE_NO'),
-          'service_info' => array('Оплата заказа '.(int)$_REQUEST['order_id'])
-        )
-      )
-    );
-
+    $params = [
+      "request" => [
+        "amount" => $paid_amount,
+        "currency" => $currency->iso_code,
+        "description" => 'Оплата заказа '.(int)$_REQUEST['order_id'],
+        "email" => $email,
+        "ip" => $_SERVER['REMOTE_ADDR'],
+        "order_id" => (int)$_REQUEST['order_id'],
+        "notification_url" => $callbackurl,
+        "payment_method" => [
+          "type" => "erip",
+          "account_number" => (int)$_REQUEST['order_id'],
+          "service_no" => (int)Configuration::get('BEGATEWAYERIP_SERVICE_NO'),
+          "service_info" => [
+            "Уважаемый клиент,",
+            "Вы оплачиваете заказ ".(int)$_REQUEST['order_id']
+          ],
+          "receipt" => [
+            'Оплата заказа '.(int)$_REQUEST['order_id']
+          ]
+        ]
+      ]
+    ];
     $url = 'https://' . (Configuration::get('BEGATEWAYERIP_DOMAIN_API')) . '/beyag/payments';
 
     /* Do the CURL request */
     $curl = curl_init($url);
 
+    $headers = array(
+      "Content-Type: application/json",
+      "Content-Length: " . strlen(json_encode($params)) 
+    );
+
+    curl_setopt($curl, CURLOPT_PORT, 443);
+    curl_setopt($curl, CURLOPT_HEADER, 0);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-      'Content-Type: application/json',
-    )) ;
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
     curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-    curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_POST, 1);
     curl_setopt($curl, CURLOPT_USERPWD,
       Configuration::get('BEGATEWAYERIP_SHOP_ID') . ':' .
       Configuration::get('BEGATEWAYERIP_SHOP_KEY'));
-    curl_setopt($curl, CURLOPT_POST, 0);
     curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($params));
 
-    $response = curl_exec($curl);
+    $response = json_decode(curl_exec($curl),true);
 
     if (!$response) {
       Logger::addLog('Ошибка создания требования на оплату в ЕРИП: ' . curl_error($curl) . '(' . curl_errno($curl) . ')',4);
@@ -137,8 +146,6 @@ class be_gateway_erip_validation extends beGatewayERIP {
     }
 
     curl_close($curl);
-
-    $response = json_decode($response,true);
 
     if ($response == NULL) {
       Logger::addLog('Ошибка обработки ответа на создание требования на оплату в ЕРИП',4);
@@ -195,7 +202,8 @@ class be_gateway_erip_validation extends beGatewayERIP {
       die('Критическая ошибка с валидацией JSON');
     }
 
-    $order = new Order((int)$json['transaction']['order_id']);
+    $orderId = Order::getOrderByCartId((int)$json['transaction']['order_id']);
+    $order = new Order($orderId);
 		$order_state_obj = new OrderState(Configuration::get('EP_OS_PAYMENT_VALID'));
 
     if (!Validate::isLoadedObject($order))
