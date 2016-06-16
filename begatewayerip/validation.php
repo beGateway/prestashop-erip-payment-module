@@ -101,17 +101,6 @@ class be_gateway_erip_validation extends beGatewayERIP {
         "ip" => $_SERVER['REMOTE_ADDR'],
         "order_id" => (int)$_REQUEST['order_id'],
         "notification_url" => $callbackurl,
-        /*
-        "customer" => [
-          "first_name" => $order_sybmol_link->shipping_first_name,
-          "last_name" => $order_sybmol_link->shipping_last_name,
-          "country" => $order_sybmol_link->shipping_country,
-          "city" => $order_sybmol_link->shipping_city,
-          "zip" => $order_sybmol_link->shipping_postcode,
-          "address" => $order_sybmol_link->shipping_address_1.' '.$order_sybmol_link->shipping_address_2,
-          "phone" => $order_sybmol_link->billing_phone
-        ],
-        */
         "payment_method" => [
           "type" => "erip",
           "account_number" => (int)$_REQUEST['order_id'],
@@ -138,7 +127,6 @@ class be_gateway_erip_validation extends beGatewayERIP {
 
     curl_setopt($curl, CURLOPT_PORT, 443);
     curl_setopt($curl, CURLOPT_HEADER, 0);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
