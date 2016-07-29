@@ -92,20 +92,27 @@ class be_gateway_erip_validation extends beGatewayERIP {
     $callbackurl = str_replace('carts.local', 'webhook.begateway.com:8443', $callbackurl);
     $paid_amount = (int)($cart->getOrderTotal(true, Cart::BOTH) * pow(10, (int)$currency->decimals * _PS_PRICE_COMPUTE_PRECISION_));
 
+    $this->be_gateway_erip->validateOrder((int)$cart->id,
+      Configuration::get('EP_OS_WAITING'), $paid_amount ,
+      $this->be_gateway_erip->displayName, 'Регистрируется в ЕРИП', NULL, NULL, false, $customer->secure_key);
+
+    $auth_order = new Order($this->be_gateway_erip->currentOrder);
+    $status = Configuration::get('EP_OS_PAYMENT_ERROR');
+
     $params = array(
       'request' => array(
       	'amount' => $paid_amount,
       	'currency' => $currency->iso_code,
-        'description' => 'Оплата заказа '.(int)$_REQUEST['order_id'],
+        'description' => 'Оплата заказа '.$auth_order->id,
         'email' => $email,
         'ip' => $_SERVER['REMOTE_ADDR'],
-        'order_id' => (int)$_REQUEST['order_id'],
+        'order_id' => $auth_order->id,
         'notification_url' => $callbackurl,
         'payment_method' => array(
           'type' => 'erip',
-          'account_number' => (int)$_REQUEST['order_id'],
+          'account_number' => $auth_order->id,
           'service_no' => (int)Configuration::get('BEGATEWAYERIP_SERVICE_NO'),
-          'service_info' => array('Оплата заказа '.(int)$_REQUEST['order_id'])
+          'service_info' => array('Оплата заказа '.$auth_order->id)
         )
       )
     );
@@ -114,26 +121,33 @@ class be_gateway_erip_validation extends beGatewayERIP {
 
     /* Do the CURL request */
     $curl = curl_init($url);
+    $json = json_encode($params);
 
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curl, CURLOPT_HEADER, 0);
+    curl_setopt($curl, CURLOPT_PORT, 443);
     curl_setopt($curl, CURLOPT_HTTPHEADER, array(
       'Content-Type: application/json',
-    )) ;
+      "Content-Length: " . strlen($json)
+    ));
     curl_setopt($curl, CURLOPT_FORBID_REUSE, 1);
     curl_setopt($curl, CURLOPT_FRESH_CONNECT, 1);
-    curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 60);
     curl_setopt($curl, CURLOPT_USERPWD,
       Configuration::get('BEGATEWAYERIP_SHOP_ID') . ':' .
       Configuration::get('BEGATEWAYERIP_SHOP_KEY'));
-    curl_setopt($curl, CURLOPT_POST, 0);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($params));
+    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
 
     $response = curl_exec($curl);
 
     if (!$response) {
-      Logger::addLog('Ошибка создания требования на оплату в ЕРИП: ' . curl_error($curl) . '(' . curl_errno($curl) . ')',4);
+      $msg = 'Ошибка создания требования на оплату в ЕРИП: ';
+      $this->be_gateway_erip->changeOrderStatusWithMessage($auth_order, $status, $msg . curl_error($curl));
+      Logger::addLog($msg . curl_error($curl) . '(' . curl_errno($curl) . ')',4);
       curl_close($curl);
-      die('Ошибка создания требования на оплату в ЕРИП');
+      die($msg);
     }
 
     curl_close($curl);
@@ -141,8 +155,10 @@ class be_gateway_erip_validation extends beGatewayERIP {
     $response = json_decode($response,true);
 
     if ($response == NULL) {
-      Logger::addLog('Ошибка обработки ответа на создание требования на оплату в ЕРИП',4);
-      die('Ошибка обработки ответа на создание требования на оплату в ЕРИП');
+      $msg = 'Ошибка обработки ответа на создание требования на оплату в ЕРИП';
+      $this->be_gateway_erip->changeOrderStatusWithMessage($auth_order, $status, $msg);
+      Logger::addLog($msg, 4);
+      die($msg);
     }
 
     switch ($response['transaction']['status'])
@@ -153,18 +169,16 @@ class be_gateway_erip_validation extends beGatewayERIP {
 
         $instruction = implode(' ', $response['transaction']['erip']['instruction']);
 
-    		$this->be_gateway_erip->validateOrder((int)$cart->id,
-    			Configuration::get('EP_OS_WAITING'), $paid_amount ,
-    			$this->be_gateway_erip->displayName, $message, NULL, NULL, false, $customer->secure_key);
+        $this->be_gateway_erip->addOrderMessage($auth_order, $message);
     		break ;
 
     	default:
     		$error_message = (isset($response['message']) && !empty($response['errors'])) ? urlencode(Tools::safeOutput($response['message'])) : 'Ошибка создания счёта в ЕРИП. Свяжитесь с администратором магазина.';
         $error = true;
-        Logger::addLog('Ошибка создания требования на оплату в ЕРИП: ' . $error_message, 4);
+        $msg = 'Ошибка создания требования на оплату в ЕРИП: ' . $error_message;
+        Logger::addLog($msg, 4);
+        $this->be_gateway_erip->changeOrderStatusWithMessage($auth_order, $status, $msg);
     }
-
-    $auth_order = new Order($this->be_gateway_erip->currentOrder);
 
     $redirect_url = Context::getContext()->link->getPageLink('order-confirmation', null, null, array(
       'id_order' => $auth_order->id,

@@ -60,7 +60,7 @@ private $os_payment_green_statuses = array(
 	{
 		$this->name = 'begatewayerip';
 		$this->tab = 'payments_gateways';
-		$this->version = '1.0.0';
+		$this->version = '1.0.1';
 		$this->author = 'eComCharge';
     $this->controllers = array('payment', 'validation');
 
@@ -308,6 +308,22 @@ public function hookHeader()
     else {
       Logger::addLog('Произошла ошибка при смене статуса заказа или не получилось выслать письмо клиенту',4);
     }
+  }
+
+  public function addOrderMessage($obj_order, $message) {
+    $msg = new Message();
+    $message = strip_tags($message, '<br>');
+    if (Validate::isCleanHtml($message)) {
+      $msg->message = $message;
+      $msg->id_order = $obj_order->id;
+      $msg->private = 1;
+      $msg->add();
+    }
+  }
+
+  public function changeOrderStatusWithMessage($obj_order, $status, $message) {
+    $this->changeOrderStatus($obj_order, $status);
+    $this->addOrderMessage($obj_order, $message);
   }
 
 	private function checkForUpdates()
