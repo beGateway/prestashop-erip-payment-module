@@ -2,7 +2,7 @@
 <module>
 	<name>erip</name>
 	<displayName><![CDATA[Система Расчёт (ЕРИП)]]></displayName>
-	<version><![CDATA[1.0.0]]></version>
+	<version><![CDATA[1.0.1]]></version>
 	<description><![CDATA[Принимайте платежи через ЕРИП с bePaid.by]]></description>
 	<author><![CDATA[eComCharge]]></author>
 	<tab><![CDATA[payments_gateways]]></tab>

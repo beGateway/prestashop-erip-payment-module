@@ -90,7 +90,8 @@ class be_gateway_erip_validation extends beGatewayERIP {
     $return_base_url=(Configuration::get('PS_SSL_ENABLED') ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST'].__PS_BASE_URI__.'modules/'.$this->be_gateway_erip->name.'/validation.php?';
     $callbackurl = $return_base_url . 'action=callback';
     $callbackurl = str_replace('carts.local', 'webhook.begateway.com:8443', $callbackurl);
-    $paid_amount = (int)($cart->getOrderTotal(true, Cart::BOTH) * pow(10, (int)$currency->decimals * _PS_PRICE_COMPUTE_PRECISION_));
+    $paid_amount = strval($cart->getOrderTotal(true, Cart::BOTH) * 100);
+    $paid_amount = intval($paid_amount);
 
     $this->be_gateway_erip->validateOrder((int)$cart->id,
       Configuration::get('EP_OS_WAITING'), $paid_amount ,
@@ -242,7 +243,7 @@ class be_gateway_erip_validation extends beGatewayERIP {
     $message = $json['transaction']['message'];
 
     $paid_amount = $json['transaction']['amount'];
-    $paid_amount = $paid_amount / pow(10, $currency->decimals * _PS_PRICE_COMPUTE_PRECISION_);
+    $paid_amount = floatval($paid_amount / 100);
     $paid_amount = Tools::ps_round($paid_amount, $currency->decimals);
 
     if ($json['transaction']['status'] == 'successful')
